@@ -1,0 +1,62 @@
+%segment individual digits from a paper of handwritten digits
+
+rawImg = imread('LT.jpg');
+%show(rawImg);
+rawImg = rgb2gray(rawImg);
+wbImg = imbinarize(rawImg,0.98);
+wbImg = double(wbImg);
+wbImg(wbImg == 0) = 0.5;
+wbImg(wbImg == 1) = 0;
+wbImg(wbImg == 0.5) = 1;
+wbImg=imresize(wbImg,0.3);
+wbImg = imbinarize(wbImg);
+wbImg=im_thin(wbImg);
+% wbImg = medfilt2(wbImg,[2,2]);
+show(wbImg);
+%%
+%[row, col] = find(wbImg == 1);
+row_sum = sum(wbImg,2);
+col_sum = sum(wbImg,1);
+row_len = length(row_sum);
+row_bound = zeros(row_len,1);
+for i=1:row_len-1
+    if((row_sum(i) == 0 && row_sum(i+1) ~= 0) ||(row_sum(i) ~= 0 && row_sum(i+1) == 0) )
+        row_bound(i) = i;
+    end
+        
+end
+row_bound(row_bound == 0) = [];
+row_num = length(row_bound);
+%show(wbImg(row_bound(1):row_bound(2),:));
+
+col_len = length(col_sum);
+col_bound = zeros(col_len,1);
+for j=1:col_len-1
+    if((col_sum(j) == 0 && col_sum(j+1) ~= 0) ||(col_sum(j) ~= 0 && col_sum(j+1) == 0) )
+        col_bound(j) = j;
+    end
+end
+col_bound(col_bound == 0) = [];
+col_num = length(col_bound);
+%show(wbImg(:,col_bound(1):col_bound(2)));
+outputDigits = cell(1,row_num * col_num/4);
+count = 1;
+for i = 1:2:row_num-1
+    for j = 1:2:col_num-1
+        outputDigits{1,count} = wbImg(row_bound(i):row_bound(i+1),col_bound(j):col_bound(j+1));
+        count = count + 1;
+    end
+end
+
+%in case some position does not have a number,for example
+%1  [] 3
+%[] 2  6
+%7  9  0
+%outputDigits{1,9} = [];
+for i = 1 : row_num * col_num/4
+    if(isempty(find(outputDigits{1,i} == 1)))
+        outputDigits{1,i} = [];
+    end
+end
+outputDigits = outputDigits(~cellfun('isempty',outputDigits));
+%show(outputDigits{1,16});
